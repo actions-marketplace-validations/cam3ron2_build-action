@@ -98,8 +98,8 @@ runs:
         platforms: linux/amd64,linux/arm64
         push: ${{ inputs.push == 'true' && github.event_name != 'pull_request' }}
         tags: ${{ steps.meta.outputs.tags }}
-        cache-from: type=local,src=/tmp/.buildx-cache-new
-        cache-to: type=local,mode=max,dest=/tmp/.buildx-cache-new
+        cache-from: type=local,src=/tmp/.buildx-cache
+        cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
     - name: Move cache
       shell: bash
       run: |
