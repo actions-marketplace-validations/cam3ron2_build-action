@@ -1,50 +1,46 @@
-name: "Predefined Build/Test/Push"
-description: "Builds a docker image and pushes to one or more registries"
-author: "@cam3ron2"
+name: 'Predefined Build/Test/Push'
+description: 'Builds a docker image and pushes to one or more registries'
+author: '@cam3ron2'
 branding:
-  icon: "terminal"
-  color: "blue"
+  icon: 'terminal'
+  color: 'blue'
 
 inputs:
   file:
-    description: "Path to the Dockerfile"
-    default: "Dockerfile"
+    description: 'Path to the Dockerfile'
+    default: 'Dockerfile'
     required: false
   context:
-    description: "Build's context is the set of files located in the specified PATH or URL"
-    default: "."
+    description: 'Build's context is the set of files located in the specified PATH or URL'
+    default: '.'
     required: false
   build-args:
-    description: "Arguments to pass to the Dockerfile"
+    description: 'Arguments to pass to the Dockerfile'
     required: false
   registry:
     # for multiple registry usage users should be using a matrix strategy on their
     # github workflow. Because of the cache artifact, build time will not increase.
-    description: "Registry that houses the repository"
+    description: 'Registry that houses the repository'
     required: false
-    default: ""
+    default: ''
   repository:
-    description: "Repository to push to"
+    description: 'Repository to push to'
     required: true
   push:
-    description: "Push the image to the registry"
-    default: "true"
+    description: 'Push the image to the registry'
+    default: 'true'
     required: false
   username:
-    description: "Username for the registry"
-    default: ""
+    description: 'Username for the registry'
+    default: ''
     required: false
   password:
-    description: "Password for the registry"
-    default: ""
-    required: false
-  email:
-    description: "Email for the registry"
-    default: ""
+    description: 'Password for the registry'
+    default: ''
     required: false
   publish-cache:
-    description: "If true, create an artifact"
-    default: "true"
+    description: 'If true, create an artifact'
+    default: 'true'
     required: false
 
 outputs:
@@ -59,7 +55,7 @@ outputs:
     value: '{{ steps.push.metadata }}'
 
 runs:
-  using: "composite"
+  using: 'composite'
   steps:
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2
@@ -80,7 +76,7 @@ runs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
     - name: Retrieve Cache
-      if: ${{ inputs.publish-cache == "true" }}
+      if: ${{ inputs.publish-cache == 'true' }}
       uses: actions/download-artifact@v3
       with:
         name: buildx-cache
@@ -92,10 +88,10 @@ runs:
         ${{ (
           (inputs.registry == 'hub.docker.io') || 
           (inputs.registry == 'docker.io') || 
-          (inpupts.registry == 'dockerhub') || 
-          (inputs.registry == "")
+          (inputs.registry == 'dockerhub') || 
+          (inputs.registry == '')
         ) && (
-          (inputs.username != "") && (inputs.password != "")
+          (inputs.username != '') && (inputs.password != '')
         ) && (
           (github.event_name != 'pull_request')
         ) }}
@@ -103,47 +99,47 @@ runs:
       with:
         username: ${{ inputs.username }}
         password: ${{ inputs.password }}
-    - name: Login to DockerHub via secrets
+    - name: Login to DockerHub via env
       if: |
         ${{ (
           (inputs.registry == 'hub.docker.io') || 
           (inputs.registry == 'docker.io') || 
-          (inpupts.registry == 'dockerhub') || 
-          (inputs.registry == "")
+          (inputs.registry == 'dockerhub') || 
+          (inputs.registry == '')
         ) && (
-          (secrets.REGISTRY_USERNAME != "") && (secrets.REGISTRY_TOKEN != "")
+          (env.REGISTRY_USERNAME != '') && (env.REGISTRY_TOKEN != '')
         ) && (
           (github.event_name != 'pull_request')
         ) }}
       uses: docker/login-action@v2
       with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
+        username: ${{ env.DOCKER_USERNAME }}
+        password: ${{ env.DOCKER_PASSWORD }}
     # GHCR
     - name: Login to GHCR via Inputs
       if: |
         ${{ (
           contains(inputs.registry,'ghcr.io')
         ) && (
-          (inputs.username != "") && (inputs.password != "")
+          (inputs.username != '') && (inputs.password != '')
         ) }}
       uses: docker/login-action@v2
       with:
         registry: ${{ inputs.registry }}
         username: ${{ inputs.username }}
         password: ${{ inputs.password }}
-    - name: Login to GHCR via secrets
+    - name: Login to GHCR via env
       if: |
         ${{ (
           contains(inputs.registry,'ghcr.io')
         ) && (
-          (github.repository_owner != "") && (secrets.GITHUB_TOKEN != "")
+          (github.repository_owner != '') && (env.GITHUB_TOKEN != '')
         ) }}
       uses: docker/login-action@v2
       with:
         registry: ${{ inputs.registry }}
         username: ${{ github.repository_owner }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        password: ${{ env.GITHUB_TOKEN }}
     # ECR
     # to obtain/set credentials, see https://github.com/aws-actions/configure-aws-credentials
     - name: Login to Amazon ECR
@@ -162,9 +158,9 @@ runs:
         ${{ (
           contains(inputs.registry,'azurecr.io') ||
           contains(inputs.registry,'gcr.io') ||
-          (inputs.registry != "")
+          (inputs.registry != '')
         ) && (
-          (inputs.username != "") && (inputs.password != "")
+          (inputs.username != '') && (inputs.password != '')
         ) && (
           (github.event_name != 'pull_request')
         ) }}
@@ -173,22 +169,22 @@ runs:
         registry: ${{ inputs.registry }}
         username: ${{ inputs.username }}
         password: ${{ inputs.password }}
-    - name: Login to Registry via secrets
+    - name: Login to Registry via env
       if: |
         ${{ (
           contains(inputs.registry,'azurecr.io') ||
           contains(inputs.registry,'gcr.io') ||
-          (inputs.registry != "")
+          (inputs.registry != '')
         ) && (
-          (secrets.REGISTRY_USERNAME != "") && (secrets.REGISTRY_TOKEN != "")
+          (env.REGISTRY_USERNAME != '') && (env.REGISTRY_TOKEN != '')
         ) && (
           (github.event_name != 'pull_request')
         ) }}
       uses: docker/login-action@v2
       with:
         registry: ${{ inputs.registry }}
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
+        username: ${{ env.DOCKER_USERNAME }}
+        password: ${{ env.DOCKER_PASSWORD }}
     # END LOGIN
     - name: Build
       uses: docker/build-push-action@v3
@@ -220,7 +216,7 @@ runs:
         cache-from: type=local,src=/tmp/.buildx-cache-new
         cache-to: type=local,dest=/tmp/.buildx-cache-new
     - name: Publish Cache
-      if: ${{ (inputs.publish-cache == "true") && (github.event_name != 'pull_request') }}
+      if: ${{ (inputs.publish-cache == 'true') && (github.event_name != 'pull_request') }}
       uses: actions/upload-artifact@v3
       with:
         name: buildx-cache
