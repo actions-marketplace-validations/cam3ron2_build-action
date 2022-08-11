@@ -1,5 +1,5 @@
-name: 'Predefined Build/Test/Push'
-description: 'Builds a docker image and pushes to one or more registries'
+name: 'Predefined Build/Push'
+description: 'Builds a docker image and pushes a registry'
 author: '@cam3ron2'
 branding:
   icon: 'terminal'
