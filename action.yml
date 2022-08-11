@@ -11,19 +11,22 @@ inputs:
     default: 'Dockerfile'
     required: false
   context:
-    description: 'Build's context is the set of files located in the specified PATH or URL'
+    description: "Build's context is the set of files located in the specified PATH or URL"
     default: '.'
     required: false
   build-args:
     description: 'Arguments to pass to the Dockerfile'
+    default: ''
     required: false
   registry:
     # for multiple registry usage users should be using a matrix strategy on their
     # github workflow. Because of the cache artifact, build time will not increase.
     description: 'Registry that houses the repository'
+    default: ''
     required: false
   repository:
     description: 'Repository to push to'
+    default: ''
     required: true
   push:
     description: 'Push the image to the registry'
@@ -31,9 +34,11 @@ inputs:
     required: false
   username:
     description: 'Username for the registry'
+    default: ''
     required: false
   password:
     description: 'Password for the registry'
+    default: ''
     required: false
   publish-cache:
     description: 'If true, create an artifact'
