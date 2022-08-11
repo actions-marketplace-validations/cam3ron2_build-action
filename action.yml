@@ -97,8 +97,6 @@ runs:
         context: ${{ inputs.context }}
         file: ${{ inputs.file }}
         build-args: ${{ inputs.build-args }}
-        # we migh not be able to load multiarch, so we need to test this.
-        platforms: linux/amd64,linux/arm64
         push: false
         pull: true
         load: true
