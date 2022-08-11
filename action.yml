@@ -22,7 +22,6 @@ inputs:
     # github workflow. Because of the cache artifact, build time will not increase.
     description: 'Registry that houses the repository'
     required: false
-    default: ''
   repository:
     description: 'Repository to push to'
     required: true
@@ -32,11 +31,9 @@ inputs:
     required: false
   username:
     description: 'Username for the registry'
-    default: ''
     required: false
   password:
     description: 'Password for the registry'
-    default: ''
     required: false
   publish-cache:
     description: 'If true, create an artifact'
