@@ -42,6 +42,7 @@ inputs:
     description: 'If true, create an artifact'
     default: 'true'
     required: false
+    
 outputs:
   imageid:
     description: 'Image ID'
