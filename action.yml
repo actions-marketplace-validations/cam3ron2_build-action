@@ -106,7 +106,7 @@ runs:
     # snyk, wiz and other tests here
     # end tests
     - name: Push
-      if: github.event_name != 'pull_request'
+      # if: github.event_name != 'pull_request'
       id: push
       uses: docker/build-push-action@v3
       with:
@@ -119,7 +119,7 @@ runs:
         cache-from: type=local,src=/tmp/.buildx-cache-new
         cache-to: type=local,dest=/tmp/.buildx-cache-new
     - name: Publish Cache
-      if: ${{ (inputs.publish-cache == 'true') && (github.event_name != 'pull_request') }}
+      # if: ${{ (inputs.publish-cache == 'true') && (github.event_name != 'pull_request') }}
       uses: actions/upload-artifact@v3
       with:
         name: buildx-cache
