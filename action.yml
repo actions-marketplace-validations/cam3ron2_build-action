@@ -78,16 +78,12 @@ runs:
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
     - name: Retrieve Cache
-      id: retrieve-cache
+      continue-on-error: true
       if: ${{ inputs.publish-cache == 'true' }}
       uses: actions/download-artifact@v3
       with:
         name: buildx-cache
         path: /tmp/.buildx-cache-new
-    - name: Allow Cache-Pull Failure
-      if: ${{ steps.retrieve-cache.status != 'success' }}
-      shell: bash
-      run: echo "Cache-Pull Failure, Proceeding without Cache"
     # BEGIN LOGIN
     # DockerHub
     - name: Login to DockerHub via Inputs
