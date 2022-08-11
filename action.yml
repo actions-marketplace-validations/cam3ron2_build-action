@@ -44,7 +44,13 @@ inputs:
     description: 'If true, create an artifact'
     default: 'true'
     required: false
-
+  snyk-token:
+    description: 'Snyk token'
+    default: ''
+    required: false
+  language:
+    description: "Language that we will run Snyk tests against. Must be one of 'cocoapods', 'dotnet', 'golang', 'gradle-jdk11', 'gradle-jdk12', 'gradle-jdk14', 'gradle-jdk16', 'gradle-jdk17', 'maven', 'maven-3-jdk-11, 'node', 'php', 'python', 'python-3.6', 'python-3.7', 'python-3.8', 'ruby', 'scala', 'docker', 'iac'"
+    required: true
 outputs:
   imageid:
     description: 'Image ID'
@@ -104,6 +110,13 @@ runs:
         cache-from: type=local,src=/tmp/.buildx-cache
         cache-to: type=local,dest=/tmp/.buildx-cache-new
     # snyk, wiz and other tests here
+    - name: Run Snyk to check for vulnerabilities
+      if: ${{ inputs.snyk-token != '' }}
+      uses: snyk/actions/${{ inputs.language }}@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+      with:
+        command: test # monitor
     # end tests
     - name: Push
       # if: github.event_name != 'pull_request'
