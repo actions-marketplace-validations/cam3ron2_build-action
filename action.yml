@@ -111,10 +111,10 @@ runs:
         cache-to: type=local,dest=/tmp/.buildx-cache-new
     # snyk, wiz and other tests here
     - name: Run Snyk to check for vulnerabilities
-      if: ${{ inputs.snyk-token != '' }}
-      uses: snyk/actions/${{ inputs.language }}@master
+      if: ${{ (inputs.snyk-token != '') && (inputs.language == 'golang') }}
+      uses: snyk/actions/golang@master
       env:
-        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        SNYK_TOKEN: ${{ inputs.snyk-token }}
       with:
         command: test # monitor
     # end tests
