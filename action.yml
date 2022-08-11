@@ -35,11 +35,11 @@ inputs:
   username:
     description: 'Username for the registry'
     default: ''
-    required: false
+    required: true
   password:
     description: 'Password for the registry'
     default: ''
-    required: false
+    required: true
   publish-cache:
     description: 'If true, create an artifact'
     default: 'true'
@@ -65,7 +65,7 @@ runs:
       id: meta
       uses: docker/metadata-action@v4
       with:
-        images: ${{ inputs.registry }}/{{ inputs.repository }}
+        images: ${{ inputs.registry }}/${{ inputs.repository }}
         # generate Docker tags based on the following events/attributes
         tags: |
           type=schedule
@@ -84,111 +84,13 @@ runs:
       with:
         name: buildx-cache
         path: /tmp/.buildx-cache-new
-    # BEGIN LOGIN
-    # DockerHub
-    - name: Login to DockerHub via Inputs
-      if: |
-        ${{ (
-          (inputs.registry == 'hub.docker.io') || 
-          (inputs.registry == 'docker.io') || 
-          (inputs.registry == 'dockerhub') || 
-          (inputs.registry == '')
-        ) && (
-          (inputs.username != '') && (inputs.password != '')
-        ) && (
-          (github.event_name != 'pull_request')
-        ) }}
-      uses: docker/login-action@v2
-      with:
-        username: ${{ inputs.username }}
-        password: ${{ inputs.password }}
-    - name: Login to DockerHub via env
-      if: |
-        ${{ (
-          (inputs.registry == 'hub.docker.io') || 
-          (inputs.registry == 'docker.io') || 
-          (inputs.registry == 'dockerhub') || 
-          (inputs.registry == '')
-        ) && (
-          (env.REGISTRY_USERNAME != '') && (env.REGISTRY_TOKEN != '')
-        ) && (
-          (github.event_name != 'pull_request')
-        ) }}
-      uses: docker/login-action@v2
-      with:
-        username: ${{ env.DOCKER_USERNAME }}
-        password: ${{ env.DOCKER_PASSWORD }}
-    # GHCR
-    - name: Login to GHCR via Inputs
-      if: |
-        ${{ (
-          contains(inputs.registry,'ghcr.io')
-        ) && (
-          (inputs.username != '') && (inputs.password != '')
-        ) }}
+    - name: Login to Registry
+      # if: github.event_name != 'pull_request'
       uses: docker/login-action@v2
       with:
         registry: ${{ inputs.registry }}
         username: ${{ inputs.username }}
         password: ${{ inputs.password }}
-    - name: Login to GHCR via env
-      if: |
-        ${{ (
-          contains(inputs.registry,'ghcr.io')
-        ) && (
-          (github.repository_owner != '') && (env.GITHUB_TOKEN != '')
-        ) }}
-      uses: docker/login-action@v2
-      with:
-        registry: ${{ inputs.registry }}
-        username: ${{ github.repository_owner }}
-        password: ${{ env.GITHUB_TOKEN }}
-    # ECR
-    # to obtain/set credentials, see https://github.com/aws-actions/configure-aws-credentials
-    - name: Login to Amazon ECR
-      if: contains(inputs.registry,'amazonaws.com')
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v1
-    - name: Login to Amazon ECR Public
-      if: contains(inputs.registry,'public.ecr.aws')
-      id: login-ecr-public
-      uses: aws-actions/amazon-ecr-login@v1
-      with:
-        registry-type: public
-    # all others
-    - name: Login to Registry via Inputs
-      if: |
-        ${{ (
-          contains(inputs.registry,'azurecr.io') ||
-          contains(inputs.registry,'gcr.io') ||
-          (inputs.registry != '')
-        ) && (
-          (inputs.username != '') && (inputs.password != '')
-        ) && (
-          (github.event_name != 'pull_request')
-        ) }}
-      uses: docker/login-action@v2
-      with:
-        registry: ${{ inputs.registry }}
-        username: ${{ inputs.username }}
-        password: ${{ inputs.password }}
-    - name: Login to Registry via env
-      if: |
-        ${{ (
-          contains(inputs.registry,'azurecr.io') ||
-          contains(inputs.registry,'gcr.io') ||
-          (inputs.registry != '')
-        ) && (
-          (env.REGISTRY_USERNAME != '') && (env.REGISTRY_TOKEN != '')
-        ) && (
-          (github.event_name != 'pull_request')
-        ) }}
-      uses: docker/login-action@v2
-      with:
-        registry: ${{ inputs.registry }}
-        username: ${{ env.DOCKER_USERNAME }}
-        password: ${{ env.DOCKER_PASSWORD }}
-    # END LOGIN
     - name: Build
       uses: docker/build-push-action@v3
       with:
