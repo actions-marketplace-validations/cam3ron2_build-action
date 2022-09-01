@@ -61,6 +61,9 @@ outputs:
   metadata:
     description: "Build result metadata"
     value: "{{ steps.push.metadata }}"
+  default_tag:
+    description: "Default tag"
+    value: "{{ steps.tag.default_tag }}"
 
 runs:
   using: "composite"
@@ -121,11 +124,17 @@ runs:
         rm -rf /tmp/.buildx-cache
         mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
+    - name: Output Default Tag
+      shell: bash
+      id: tag
+      run: |
+        echo "::set-output name=default_tag::sha-${GITHUB_SHA::7}"
+
     - name: Run Trivy vulnerability scanner
       if: ${{ inputs.trivy == 'true' && always() }}
       uses: aquasecurity/trivy-action@master
       with:
-        image-ref: "${{ inputs.registry }}/${{ inputs.repository }}:${GITHUB_SHA::7}"
+        image-ref: "${{ inputs.registry }}/${{ inputs.repository }}:${{ steps.tag.default_tag }}"
         format: "sarif"
         output: "trivy-results.sarif"
 

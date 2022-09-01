@@ -83,12 +83,21 @@ publish-cache:
   description: 'If true, create an artifact'
   default: 'true'
   required: false
+trivy:
+  description: "Use Trivy to scan the resulting image"
+  default: "false"
+  required: false
+trivy_upload:
+  description: "Upload Trivy scan results to GitHub Security tab"
+  default: "true"
+  required: false
 ```
 
 ## Outputs
 
 - imageid: The image id of the built image. ex: `sha256:someshahere`
 - digest: The digest of the built image. ex: `sha256:someshahere`
+- default_tag: An image:tag for the image that can be referenced. Currently, the tag is equivalent to "sha-$(git rev-parse --short HEAD)
 - metadata: A json object containing the metadata of the built image, including the tags that were pushed. Example:
 
 ```json
