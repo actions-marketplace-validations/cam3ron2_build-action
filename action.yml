@@ -147,7 +147,7 @@ runs:
         echo "::set-output name=default_tag::sha-$(git rev-parse --short ${GITHUB_SHA})"
 
     - name: Run Trivy vulnerability scanner
-      if: ${{ inputs.trivy == 'true' && inputs.push == 'true' && github.event_name != 'pull_request }}
+      if: ${{ inputs.trivy == 'true' && inputs.push == 'true' && github.event_name != 'pull_request' }}
       uses: aquasecurity/trivy-action@master
       with:
         image-ref: "${{ inputs.registry }}/${{ inputs.repository }}:${{ steps.tag.outputs.default_tag }}"
@@ -155,7 +155,7 @@ runs:
         output: "trivy-results.sarif"
 
     - name: Upload Trivy scan results to GitHub Security tab
-      if: ${{ inputs.trivy == 'true' && inputs.push == 'true' && github.event_name != 'pull_request && always() }}
+      if: ${{ inputs.trivy == 'true' && inputs.push == 'true' && github.event_name != 'pull_request' && always() }}
       uses: github/codeql-action/upload-sarif@v2
       with:
         sarif_file: "trivy-results.sarif"
