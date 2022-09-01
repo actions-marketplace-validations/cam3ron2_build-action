@@ -1,64 +1,73 @@
-name: 'Predefined Build/Push'
-description: 'Builds a docker image and pushes a registry'
-author: '@cam3ron2'
+name: "Predefined Build/Push"
+description: "Builds a docker image and pushes a registry"
+author: "@cam3ron2"
 branding:
-  icon: 'terminal'
-  color: 'blue'
+  icon: "repeat"
+  color: "yellow"
 
 inputs:
   file:
-    description: 'Path to the Dockerfile'
-    default: 'Dockerfile'
+    description: "Path to the Dockerfile"
+    default: "Dockerfile"
     required: false
   context:
     description: "Build's context is the set of files located in the specified PATH or URL"
-    default: '.'
+    default: "."
     required: false
   build-args:
-    description: 'Arguments to pass to the Dockerfile'
-    default: ''
+    description: "Arguments to pass to the Dockerfile"
+    default: ""
     required: false
   registry:
-    description: 'Registry that houses the repository'
-    default: ''
+    description: "Registry that houses the repository"
+    default: ""
     required: false
   repository:
-    description: 'Repository to push to'
-    default: ''
+    description: "Repository to push to"
+    default: ""
     required: true
   push:
-    description: 'Push the image to the registry'
-    default: 'true'
+    description: "Push the image to the registry"
+    default: "true"
     required: false
   username:
-    description: 'Username for the registry'
-    default: ''
+    description: "Username for the registry"
+    default: ""
     required: true
   password:
-    description: 'Password for the registry'
-    default: ''
+    description: "Password for the registry"
+    default: ""
     required: true
   publish-cache:
-    description: 'If true, create an artifact'
-    default: 'true'
+    description: "If true, create an artifact"
+    default: "true"
     required: false
-    
+  trivy:
+    description: "Use Trivy to scan the resulting image"
+    default: "false"
+    required: false
+  trivy_upload:
+    description: "Upload Trivy scan results to GitHub Security tab"
+    default: "true"
+    required: false
+
 outputs:
   imageid:
-    description: 'Image ID'
-    value: '{{ steps.push.imageid }}'
+    description: "Image ID"
+    value: "{{ steps.push.imageid }}"
   digest:
-    description: 'Image digest'
-    value: '{{ steps.push.digest }}'
+    description: "Image digest"
+    value: "{{ steps.push.digest }}"
   metadata:
-    description: 'Build result metadata'
-    value: '{{ steps.push.metadata }}'
+    description: "Build result metadata"
+    value: "{{ steps.push.metadata }}"
 
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2
+
     - name: Docker meta
       id: meta
       uses: docker/metadata-action@v4
@@ -72,8 +81,10 @@ runs:
           type=semver,pattern={{major}}.{{minor}}
           type=semver,pattern={{major}}
           type=sha
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
+
     - name: Enable Docker Cache
       uses: actions/cache@v2
       with:
@@ -82,6 +93,7 @@ runs:
         key: ${{ runner.os }}-multi-buildx-${{ github.sha }}
         restore-keys: |
           ${{ runner.os }}-multi-buildx
+
     - name: Login to Registry
       if: github.event_name != 'pull_request'
       uses: docker/login-action@v2
@@ -89,6 +101,7 @@ runs:
         registry: ${{ inputs.registry }}
         username: ${{ inputs.username }}
         password: ${{ inputs.password }}
+
     - name: Build/Push
       id: push
       uses: docker/build-push-action@v3
@@ -101,8 +114,23 @@ runs:
         tags: ${{ steps.meta.outputs.tags }}
         cache-from: type=local,src=/tmp/.buildx-cache
         cache-to: type=local,dest=/tmp/.buildx-cache-new,mode=max
+
     - name: Move cache
       shell: bash
       run: |
         rm -rf /tmp/.buildx-cache
         mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+    - name: Run Trivy vulnerability scanner
+      if: ${{ inputs.trivy == 'true' && always() }}
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: "${{ inputs.registry }}/${{ inputs.repository }}:${GITHUB_SHA::7}"
+        format: "sarif"
+        output: "trivy-results.sarif"
+
+    - name: Upload Trivy scan results to GitHub Security tab
+      if: ${{ inputs.trivy == 'true' && always() }}
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: "trivy-results.sarif"
