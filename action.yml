@@ -71,6 +71,22 @@ runs:
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2
 
+    - name: Run Trivy vulnerability scanner in repo mode
+      if: ${{ inputs.trivy == 'true' }}
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        ignore-unfixed: true
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        severity: 'CRITICAL,HIGH'
+
+    - name: Upload Trivy scan results to GitHub Security tab
+      if: ${{ inputs.trivy == 'true' && always() }}
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: 'trivy-results.sarif'
+
     - name: Docker meta
       id: meta
       uses: docker/metadata-action@v4
@@ -131,7 +147,7 @@ runs:
         echo "::set-output name=default_tag::sha-$(git rev-parse --short ${GITHUB_SHA})"
 
     - name: Run Trivy vulnerability scanner
-      if: ${{ inputs.trivy == 'true' && always() }}
+      if: ${{ inputs.trivy == 'true' && inputs.push == 'true' }}
       uses: aquasecurity/trivy-action@master
       with:
         image-ref: "${{ inputs.registry }}/${{ inputs.repository }}:${{ steps.tag.outputs.default_tag }}"
@@ -139,7 +155,7 @@ runs:
         output: "trivy-results.sarif"
 
     - name: Upload Trivy scan results to GitHub Security tab
-      if: ${{ inputs.trivy == 'true' && always() }}
+      if: ${{ inputs.trivy == 'true' && inputs.push == 'true' && always() }}
       uses: github/codeql-action/upload-sarif@v2
       with:
         sarif_file: "trivy-results.sarif"
