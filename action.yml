@@ -54,16 +54,16 @@ inputs:
 outputs:
   imageid:
     description: "Image ID"
-    value: "{{ steps.push.imageid }}"
+    value: "{{ steps.push.outputs.imageid }}"
   digest:
     description: "Image digest"
-    value: "{{ steps.push.digest }}"
+    value: "{{ steps.push.outputs.digest }}"
   metadata:
     description: "Build result metadata"
-    value: "{{ steps.push.metadata }}"
+    value: "{{ steps.push.outputs.metadata }}"
   default_tag:
     description: "Default tag"
-    value: "{{ steps.tag.default_tag }}"
+    value: "{{ steps.tag.outputs.default_tag }}"
 
 runs:
   using: "composite"
@@ -128,13 +128,13 @@ runs:
       shell: bash
       id: tag
       run: |
-        echo "::set-output name=default_tag::sha-$(git rev-parse --short HEAD)"
+        echo "::set-output name=default_tag::sha-$(git rev-parse --short ${GITHUB_SHA})"
 
     - name: Run Trivy vulnerability scanner
       if: ${{ inputs.trivy == 'true' && always() }}
       uses: aquasecurity/trivy-action@master
       with:
-        image-ref: "${{ inputs.registry }}/${{ inputs.repository }}:${{ steps.tag.default_tag }}"
+        image-ref: "${{ inputs.registry }}/${{ inputs.repository }}:${{ steps.tag.outputs.default_tag }}"
         format: "sarif"
         output: "trivy-results.sarif"
 
